@@ -1,0 +1,4 @@
+Golang (or Go) is a statically typed, compiled language developed by Google, known for its simplicity, speed, and performance. 
+Unlike Python, Go offers faster execution due to its compiled nature and built-in concurrency model, making it ideal for scalable systems like web servers, network tools, and microservices. 
+Go’s strict typing and minimalistic syntax reduce runtime errors and promote clean, maintainable code. 
+While Python excels in rapid development and scripting, Golang stands out for performance-critical applications, offering better memory management, goroutines for concurrency, and faster startup times for large-scale deployments.
