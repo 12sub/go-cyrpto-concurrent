@@ -1,9 +1,8 @@
 package crypto
 
-
 import (
-	"crypto/cipher"
 	"crypto/aes"
+	"crypto/cipher"
 	"encoding/base64"
 )
 
@@ -11,7 +10,7 @@ import (
 func unpad(src []byte) []byte {
 	length := len(src)
 	unpad1 := int(src[length-1])
-	return src[:(length - unpad1)]  
+	return src[:(length - unpad1)]
 }
 
 // func for decryption algorithm
@@ -19,7 +18,7 @@ func Decrypt(cryptoText string, key []byte) (string, error) {
 	// Decoding encrypted string
 	ciphertext, _ := base64.StdEncoding.DecodeString(cryptoText)
 
-	// creating private cipher key 
+	// creating private cipher key
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err

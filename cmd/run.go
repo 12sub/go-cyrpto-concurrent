@@ -11,17 +11,18 @@ import (
 )
 
 var (
-	mode 	string
-	input	[]string
-	key		string
-	inputType	string
-	concurrent	bool
+	mode       string
+	input      []string
+	key        string
+	inputType  string
+	concurrent bool
+	scheme     string
 )
 
 var runCmd = &cobra.Command{
-	Use:	"run",
-	Short:	"Run encryption and decryption",
-	Run:	func(cmd *cobra.Command, args []string) {
+	Use:   "run",
+	Short: "Run encryption and decryption",
+	Run: func(cmd *cobra.Command, args []string) {
 		// creating key through slice bytes
 		k := []byte(key)
 		if len(k) != 16 {
@@ -48,6 +49,7 @@ var runCmd = &cobra.Command{
 // flags for encryption / decryption of files, strings and a single file
 func init() {
 	runCmd.Flags().StringVar(&mode, "mode", "encrypt", "Mode: encrypt or decrypt")
+	runCmd.Flags().StringVar(&scheme, "scheme", "cbc", "Encryption scheme: cbc or gcm")
 	runCmd.Flags().StringSliceVar(&input, "input", []string{}, "Input strings or file paths")
 	runCmd.Flags().StringVar(&key, "key", "1234567890abcdef", "16-byte key")
 	runCmd.Flags().StringVar(&inputType, "type", "string", "Type: string or file")
@@ -56,52 +58,83 @@ func init() {
 }
 
 // function to encryption/decryption script logic
-func handleString(in string, mode string, key []byte){
-	if mode == "encrypt" {
-		out, err := crypto.Encrypt([]byte(in), key)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
+func handleString(in string, mode string, key []byte) {
+	var out string
+	var err error
+
+	switch scheme {
+	case "cbc":
+		if mode == "encrypt" {
+			out, err = crypto.Encrypt([]byte(in), key)
+		} else {
+			out, err = crypto.Decrypt(in, key)
 		}
+	case "gcm":
+		if mode == "encrypt" {
+			out, err = crypto.EncryptAesGcm([]byte(in), key)
+		} else {
+			plain, err := crypto.DecryptAesGcm(in, key)
+			if err == nil {
+				out = string(plain)
+			}
+		}
+	default:
+		fmt.Println("Unsupported scheme:", scheme)
+		return
+	}
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	if mode == "encrypt" {
 		fmt.Println("Encrypted: ", out)
 	} else {
-		out, err := crypto.Decrypt(in, key)
-		if err != nil {
-			fmt.Println("Error: ", err)
-			return
-		}
 		fmt.Println("Decrypted: ", out)
-	}	
-	
+	}
+
 }
 
-/// function to encryption/decryption file logic
+// / function to encryption/decryption file logic
 func handleFile(path string, mode string, key []byte) {
+
 	data, err := utils.ReadFile(path)
 	if err != nil {
 		fmt.Printf("Failed to read %s: %v\n", path, err)
 		return
 	}
-	if mode == "encrypt" {
-		out, err := crypto.Encrypt(data, key)
-		if err != nil {
-			fmt.Println("File Encryption Error:", err)
-			return
+	var out string
+	switch scheme {
+	// var out string
+	case "cbc":
+		if mode == "encrypt" {
+			out, err = crypto.Encrypt(data, key)
+		} else {
+			out, err = crypto.Decrypt(string(data), key)
 		}
-		utils.WriteFile(path+".enc", []byte(out))
-		fmt.Println("Encrypted: %s\n", path)
-	} else {
-		out, err := crypto.Decrypt(string(data), key)
-		if err != nil {
-			fmt.Println("Error: ", err)
-			return
+	case "gcm":
+		if mode == "encrypt" {
+			out, err = crypto.EncryptAesGcm(data, key)
+		} else {
+			plain, err := crypto.DecryptAesGcm(string(data), key)
+			if err == nil {
+				out = string(plain)
+			}
 		}
-		utils.WriteFile(path+".dec", []byte(out))
-		fmt.Println("Decrypted: %s\n", path)
+	default:
+		fmt.Println("Unsupported scheme:", scheme)
+		return
 	}
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	extension := ".enc"
+	if mode == "decrypt" {
+		extension = ".dec"
+	}
+	utils.WriteFile(path+extension, []byte(out))
+	fmt.Printf("%s: %s\n", mode, path)
 }
-
-
 
 // func for encryption/ decryption of multiple files concurrently
 // using waitGroup for concurrency
