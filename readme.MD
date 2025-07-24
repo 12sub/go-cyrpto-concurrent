@@ -10,7 +10,7 @@
     | --- Hashing Using SHA-256, SHA-512 --- Done|
     | --- Adding Config File Support --- |
     | --- Encrypt/Decrypt Entire Folders --- |
-    | --- Password-Derived Key Support --- |
+    | --- Password-Derived Key Support --- Done|
     | --- Logging and Verbose Mode --- |
     | --- Output to specific Directories --- |
     | --- Implementing Digital Signatures using RSA --- |
