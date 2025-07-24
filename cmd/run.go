@@ -17,6 +17,8 @@ var (
 	inputType  string
 	concurrent bool
 	scheme     string
+	password   string
+	salt       string
 )
 
 var runCmd = &cobra.Command{
@@ -24,10 +26,31 @@ var runCmd = &cobra.Command{
 	Short: "Run encryption and decryption",
 	Run: func(cmd *cobra.Command, args []string) {
 		// creating key through slice bytes
-		k := []byte(key)
-		if len(k) != 16 {
-			fmt.Println("Key must be exactly 16 bytes.")
-			return
+		var k []byte
+		if password != "" {
+			var s []byte
+			var err error
+			if salt == "" {
+				s, err := utils.GenerateSalt()
+				if err != nil {
+					fmt.Println("Error generating salt:", err)
+					return
+				}
+				fmt.Println("Generated Salt (Save this for decryption):", utils.EncodeSalt(s))
+			} else {
+				s, err = utils.DecodeSalt(salt)
+				if err != nil {
+					fmt.Println("Invalid salt:", err)
+					return
+				}
+			}
+			k = utils.DeriveKey(password, s)
+		} else {
+			k = []byte(key)
+			if len(k) != 16 {
+				fmt.Println("Key must be exactly 16 bytes.")
+				return
+			}
 		}
 
 		if inputType == "string" {
@@ -53,6 +76,8 @@ func init() {
 	runCmd.Flags().StringSliceVar(&input, "input", []string{}, "Input strings or file paths")
 	runCmd.Flags().StringVar(&key, "key", "1234567890abcdef", "16-byte key")
 	runCmd.Flags().StringVar(&inputType, "type", "string", "Type: string or file")
+	runCmd.Flags().StringVar(&password, "password", "", "Password to derive key using PBKDF2")
+	runCmd.Flags().StringVar(&salt, "salt", "", "Hex-encoded salt for PBKDF2 (optional for decryption)")
 	runCmd.Flags().BoolVar(&concurrent, "concurrent", false, "Enable concurrent file processing")
 
 }
