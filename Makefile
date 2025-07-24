@@ -1,6 +1,7 @@
 KEY = 1234ABCD$%^&(-+)
 STR_INPUT = HelloWorld
 FILES = test1.txt,test2.txt
+ALGO = sha256
 
 # Build the binary
 build:
@@ -33,6 +34,12 @@ encrypt-files-concurrent:
 # Decrypting Files (non-concurrent)
 decrypt-files-concurrent:
 	go run main.go run --mode=decrypt --type=file --input=$(FILES) --key="$(KEY)" --concurrent=true
+
+hash-string:
+	go run main.go hash --input="$(STR_INPUT)" --algo="$(ALGO)"
+
+hash-string:
+	go run main.go hash --file="$(FILES)" --algo="$(ALGO)"
 
 docker-build:
 	docker-build -t crypto-cli .

@@ -101,6 +101,8 @@ func handleFile(path string, mode string, key []byte) {
 	}
 }
 
+
+
 // func for encryption/ decryption of multiple files concurrently
 // using waitGroup for concurrency
 func handleFilesConcurrently(paths []string, mode string, key []byte) {
