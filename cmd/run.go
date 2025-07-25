@@ -96,9 +96,9 @@ func handleString(in string, mode string, key []byte) {
 		}
 	case "gcm":
 		if mode == "encrypt" {
-			out, err = crypto.EncryptAesGcm([]byte(in), key)
+			out, err = crypto.EncryptAesGcm([]byte(in), string(key))
 		} else {
-			plain, err := crypto.DecryptAesGcm(in, key)
+			plain, err := crypto.DecryptAesGcm(in, string(key))
 			if err == nil {
 				out = string(plain)
 			}
@@ -138,9 +138,9 @@ func handleFile(path string, mode string, key []byte) {
 		}
 	case "gcm":
 		if mode == "encrypt" {
-			out, err = crypto.EncryptAesGcm(data, key)
+			out, err = crypto.EncryptAesGcm(data, string(key))
 		} else {
-			plain, err := crypto.DecryptAesGcm(string(data), key)
+			plain, err := crypto.DecryptAesGcm(string(data), string(key))
 			if err == nil {
 				out = string(plain)
 			}

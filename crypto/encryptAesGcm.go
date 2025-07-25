@@ -4,18 +4,23 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/hex"
-	"errors"
+	"encoding/base64"
 	"io"
+
+	"example.com/crypto-cli/utils"
 )
 
-func EncryptAesGcm(plaintext []byte, key []byte) (string, error) {
-	if len(key) != 16 && len(key) != 24 && len(key) != 32 {
-		return "", errors.New("key must be 16, 24, or 32 bytes long")
+func EncryptAesGcm(plaintext []byte, password string) (string, error) {
+	// creating salt for hashing
+	salt, err := utils.GenerateSalt()
+	if err != nil {
+		return "", err
 	}
+	// implementing salt for key generation
+	derivedKey := utils.DeriveKey(password, salt)
 
 	// initiating cipher key
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(derivedKey)
 	if err != nil {
 		return "", err
 	}
@@ -33,7 +38,9 @@ func EncryptAesGcm(plaintext []byte, key []byte) (string, error) {
 	ciphertext := aesgcm.Seal(nonce, nonce, plaintext, nil)
 
 	// prepared nonce 2 ciphertext
-	final := append(nonce, ciphertext...)
+	// combining salt + nonce + ciphertext and return base64
+	final := append(salt, nonce...)
+	final = append(final, ciphertext...)
 
-	return hex.EncodeToString(final), nil
+	return base64.StdEncoding.EncodeToString(final), nil
 }
