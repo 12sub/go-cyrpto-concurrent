@@ -1,0 +1,36 @@
+# Crypto CLI Configuration File
+# This file provides default settings for the crypto CLI tool to avoid repetitive command-line arguments
+
+# Default encryption scheme to use when not specified
+# Options: "cbc" (Cipher Block Chaining) or "gcm" (Galois/Counter Mode)
+default_scheme: "gcm"
+
+# Enable concurrent file processing by default
+# When true, multiple files are processed simultaneously for better performance
+concurrent: true
+
+# Default password for PBKDF2 key derivation (optional)
+# WARNING: Storing passwords in config files is not recommended for production use
+# Leave empty to require password input or use --password flag
+default_password: ""
+
+# Logging verbosity level
+# Options: "debug", "info", "warn", "error"
+log_level: "info"
+
+# Batch file operation configuration
+file_task:
+  # Default operation mode
+  # Options: "encrypt" or "decrypt"
+  mode: "encrypt"
+  
+  # Default list of files to process when using batch operations
+  # Can be overridden with --input flag
+  files:
+    - "file1.txt"
+    - "file2.txt"
+    - "file3.txt"
+
+# Example usage:
+# crypto-cli --config=config.yaml run --type=file --key="1234567890abcdef"
+# crypto-cli --config=config.yaml run --type=string --input="Hello World" --password="mypassword"

@@ -29,7 +29,7 @@ A high-performance, concurrent cryptographic CLI tool built in Go that provides 
 ```
 go-crypto-concurrent/
 ├── cmd/                    # Command definitions
-│   ├── root.go            # Root CLI command setup
+│   ├── root.go            # Root CLI command setup with config support
 │   ├── run.go             # Encryption/decryption commands
 │   └── hash.go            # Hashing commands
 ├── crypto/                 # Cryptographic implementations
@@ -38,10 +38,14 @@ go-crypto-concurrent/
 │   ├── encryptAesGcm.go   # AES-GCM encryption
 │   ├── decryptAesGcm.go   # AES-GCM decryption
 │   └── hash.go            # Hashing functions
+├── internal/               # Internal packages
+│   └── config/            # Configuration management
+│       └── config.go      # YAML configuration loading
 ├── utils/                  # Utility functions
-│   ├── crypto-utils.go    # Cryptographic utilities
+│   ├── crypto-utils.go    # Cryptographic utilities (PBKDF2, salt handling)
 │   └── file.go            # File I/O operations
 ├── results/               # Sample encrypted/decrypted files
+├── config.yaml            # Example configuration file
 ├── Dockerfile             # Multi-stage Docker build
 ├── Makefile              # Build and run automation
 ├── main.go               # Application entry point
@@ -185,9 +189,35 @@ docker run --rm crypto-cli hash --input="HelloWorld" --algo=sha256
 
 ## 🔧 Configuration
 
+### Configuration File Support
+The tool now supports YAML configuration files to set default values and avoid repetitive command-line arguments:
+
+```yaml
+# config.yaml
+default_scheme: "gcm"           # Default encryption scheme: "cbc" or "gcm"
+concurrent: true                # Enable concurrent processing by default
+log_level: "info"              # Logging level: "debug", "info", "warn", "error"
+
+# Batch file operations
+file_task:
+  mode: "encrypt"              # Default mode: "encrypt" or "decrypt"
+  files:                       # Default list of files to process
+    - "file1.txt"
+    - "file2.txt"
+```
+
+**Usage with config file:**
+```bash
+# Use configuration file
+crypto-cli --config=config.yaml run --type=file --key="1234567890abcdef"
+
+# Override config values with command-line flags
+crypto-cli --config=config.yaml run --type=file --concurrent=false --scheme=cbc
+```
+
 ### Key Requirements
 - **AES Keys**: Must be exactly 16 bytes for AES-128
-- **Password Mode**: Uses PBKDF2 with 4096 iterations and SHA-256
+- **Password Mode**: Uses PBKDF2 with 10,000 iterations and SHA-256
 - **Salt**: Automatically generated for password-based encryption (save for decryption)
 
 ### Encryption Schemes
@@ -259,9 +289,11 @@ require (
 - [x] SHA-256, SHA-512 Hashing
 - [x] Password-Derived Key Support (PBKDF2)
 
+### ✅ Recently Added Features
+- [x] Configuration File Support (YAML)
+
 ### 🚧 Planned Features
 - [ ] RSA Asymmetric Encryption
-- [ ] Configuration File Support
 - [ ] Encrypt/Decrypt Entire Folders
 - [ ] Logging and Verbose Mode
 - [ ] Output to Specific Directories
