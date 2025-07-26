@@ -1,28 +1,52 @@
-# 🔐 Go Crypto CLI - Concurrent Encryption & Decryption Tool
+# 🔐 Go Crypto CLI - Advanced Concurrent Cryptographic Tool
 
-A high-performance, concurrent cryptographic CLI tool built in Go that provides secure encryption, decryption, and hashing capabilities for both strings and files. The tool supports multiple encryption schemes including AES-CBC and AES-GCM with concurrent file processing capabilities.
+A high-performance, plugin-based cryptographic CLI tool built in Go that provides secure encryption, decryption, and hashing capabilities with advanced features like logging, metadata tracking, and integrity verification. The tool supports multiple encryption schemes through a modular plugin architecture with concurrent file processing capabilities.
 
-## ✨ Features
+## ✨ Advanced Features
 
 ### 🔒 Encryption & Decryption
-- **AES-CBC Encryption**: Traditional AES with Cipher Block Chaining
-- **AES-GCM Encryption**: Authenticated encryption with additional data (AEAD)
+- **Plugin Architecture**: Modular encryption schemes via plugin system
+- **AES-CBC Plugin**: Traditional AES with Cipher Block Chaining  
+- **AES-GCM Plugin**: Authenticated encryption with additional data (AEAD)
 - **String Encryption**: Encrypt/decrypt individual strings
-- **File Encryption**: Encrypt/decrypt single or multiple files
+- **File Encryption**: Encrypt/decrypt single or multiple files with integrity verification
 - **Concurrent Processing**: High-performance parallel file processing using goroutines
-- **Password-Based Key Derivation**: PBKDF2 support for deriving keys from passwords
+- **Password-Based Key Derivation**: PBKDF2 support with configurable iterations (10,000)
 
-### 🔍 Hashing
+### 🔍 Hashing & Integrity
 - **Multiple Algorithms**: SHA-256, SHA-512, MD5
 - **String Hashing**: Hash individual strings
 - **File Hashing**: Hash entire files
 - **Hash Comparison**: Verify data integrity with hash comparison
+- **Automatic Checksums**: SHA-256 checksums generated for encrypted files
+- **Integrity Verification**: Automatic checksum validation during decryption
+
+### 🗂️ Metadata & File Management
+- **Metadata Files**: Automatic generation of `.meta.yaml` files with encryption details
+- **Original Filename Tracking**: Preserves original file information
+- **Scheme Documentation**: Records encryption scheme used
+- **Key Derivation Info**: Documents key derivation method
+- **Timestamp Tracking**: Records encryption/decryption timestamps
+
+### 📊 Logging & Monitoring
+- **Structured Logging**: Multi-level logging (debug, info, warn, error)
+- **Colored Console Output**: ANSI color-coded log messages for better readability
+- **File Logging**: Optional logging to `crypto-cli.log` file
+- **Dual Output**: Simultaneous console and file logging support
+- **Configurable Verbosity**: Adjustable log levels via CLI flags
+
+### 🔧 Configuration & Extensibility
+- **YAML Configuration**: Comprehensive configuration file support
+- **Plugin Registry**: Dynamic plugin registration and management
+- **Cleanup Mechanisms**: Automatic resource cleanup on exit
+- **Flexible Key Input**: Support for both direct keys and password-based derivation
 
 ### 🚀 Performance & Deployment
 - **Concurrent File Processing**: Process multiple files simultaneously
+- **Plugin-Based Architecture**: Easy to extend with new encryption schemes
 - **Docker Support**: Containerized deployment with multi-stage builds
 - **Cross-Platform**: Runs on Windows, Linux, and macOS
-- **Lightweight**: Minimal dependencies and optimized performance
+- **Minimal Dependencies**: Optimized with few external dependencies
 
 ## 🏗️ Project Structure
 
@@ -32,18 +56,25 @@ go-crypto-concurrent/
 │   ├── root.go            # Root CLI command setup with config support
 │   ├── run.go             # Encryption/decryption commands
 │   └── hash.go            # Hashing commands
-├── crypto/                 # Cryptographic implementations
-│   ├── encrypt.go         # AES-CBC encryption
-│   ├── decrypt.go         # AES-CBC decryption
-│   ├── encryptAesGcm.go   # AES-GCM encryption
-│   ├── decryptAesGcm.go   # AES-GCM decryption
-│   └── hash.go            # Hashing functions
+├── crypto/                 # Core cryptographic implementations
+│   ├── encrypt.go         # AES-CBC encryption functions
+│   ├── decrypt.go         # AES-CBC decryption functions
+│   ├── encryptAesGcm.go   # AES-GCM encryption functions
+│   ├── decryptAesGcm.go   # AES-GCM decryption functions
+│   └── hash.go            # Multi-algorithm hashing functions
 ├── internal/               # Internal packages
 │   └── config/            # Configuration management
 │       └── config.go      # YAML configuration loading
-├── utils/                  # Utility functions
-│   ├── crypto-utils.go    # Cryptographic utilities (PBKDF2, salt handling)
-│   └── file.go            # File I/O operations
+├── plugins/                # Plugin architecture
+│   ├── cbc.go             # AES-CBC plugin implementation
+│   └── gcm.go             # AES-GCM plugin implementation  
+├── utils/                  # Utility functions and core services
+│   ├── crypto-utils.go    # PBKDF2, salt generation & encoding
+│   ├── file.go            # File I/O operations
+│   ├── logger.go          # Structured logging with colors
+│   ├── plugins.go         # Plugin registry and management
+│   ├── checksum.go        # SHA-256 checksum operations
+│   └── metadata.go        # Metadata file management
 ├── results/               # Sample encrypted/decrypted files
 ├── config.yaml            # Example configuration file
 ├── Dockerfile             # Multi-stage Docker build
@@ -81,11 +112,16 @@ go-crypto-concurrent/
 
 ## 📖 Usage
 
-### Basic Commands
+### CLI Commands
 
-The CLI provides two main commands:
-- `run` - For encryption and decryption operations
-- `hash` - For hashing operations
+The CLI provides these main commands:
+- `run` - For encryption and decryption operations with plugin support
+- `hash` - For hashing operations with multiple algorithms
+
+### Global Flags
+- `--config` - Path to YAML configuration file
+- `--loglevel` - Set logging level: debug, info, warn, error (default: info)
+- `--logfile` - Enable logging to file (crypto-cli.log)
 
 ### Encryption & Decryption
 
@@ -101,19 +137,22 @@ go run main.go run --mode=encrypt --type=string --input="HelloWorld" --key="1234
 go run main.go run --mode=decrypt --type=string --input="ENCRYPTED_STRING_HERE" --key="1234567890abcdef"
 ```
 
-#### File Encryption
+#### File Encryption with Integrity Features
 ```bash
-# Encrypt single file
+# Encrypt single file (generates .enc, .sha256, and .meta.yaml files)
 go run main.go run --mode=encrypt --type=file --input=file1.txt --key="1234567890abcdef"
 
-# Encrypt multiple files
-go run main.go run --mode=encrypt --type=file --input=file1.txt,file2.txt --key="1234567890abcdef"
+# Encrypt multiple files with logging
+go run main.go run --mode=encrypt --type=file --input=file1.txt,file2.txt --key="1234567890abcdef" --loglevel=debug
 
 # Encrypt multiple files concurrently (high performance)
 go run main.go run --mode=encrypt --type=file --input=file1.txt,file2.txt --key="1234567890abcdef" --concurrent=true
 
-# Decrypt files
+# Decrypt files with integrity verification
 go run main.go run --mode=decrypt --type=file --input=file1.txt.enc,file2.txt.enc --key="1234567890abcdef"
+
+# Enable file logging
+go run main.go run --mode=encrypt --type=file --input=data.txt --key="1234567890abcdef" --logfile
 ```
 
 #### Password-Based Encryption
@@ -224,9 +263,12 @@ crypto-cli --config=config.yaml run --type=file --concurrent=false --scheme=cbc
 - **CBC (Cipher Block Chaining)**: Traditional mode with IV
 - **GCM (Galois/Counter Mode)**: Authenticated encryption with integrity checking
 
-### File Extensions
+### File Extensions and Generated Files
 - **Encrypted files**: Original filename + `.enc`
 - **Decrypted files**: Original filename + `.dec`
+- **Checksum files**: Original filename + `.sha256` (automatic integrity verification)
+- **Metadata files**: Original filename + `.meta.yaml` (encryption details)
+- **Log files**: `crypto-cli.log` (when file logging is enabled)
 
 ## 🏆 Performance Features
 
@@ -268,38 +310,69 @@ require (
 )
 ```
 
+## 🔌 Plugin Architecture
+
+The tool uses a modular plugin system for encryption schemes:
+
+### Plugin Interface
+```go
+type Plugin interface {
+    Encrypt(data []byte, key []byte) (string, error)
+    Decrypt(data string, key []byte) ([]byte, error)
+}
+```
+
+### Available Plugins
+- **CBC Plugin**: AES-CBC encryption with PKCS#7 padding
+- **GCM Plugin**: AES-GCM authenticated encryption
+
+### Extending with New Plugins
+1. Implement the `Plugin` interface
+2. Register with `utils.RegisterPlugin(name, plugin)`
+3. Use via `--scheme=your-plugin-name`
+
 ## 🛡️ Security Considerations
 
 ### Cryptographic Standards
 - **AES-128**: Industry-standard symmetric encryption
-- **PBKDF2**: Secure password-based key derivation
+- **PBKDF2**: Secure password-based key derivation (10,000 iterations)
 - **Secure Random**: Cryptographically secure random number generation
 - **PKCS#7 Padding**: Standard padding scheme for block ciphers
+- **SHA-256 Checksums**: Automatic integrity verification
 
 ### Best Practices
-- Always use strong, unique keys
+- Always use strong, unique keys (16 bytes for AES-128)
 - Store salts securely when using password-based encryption
 - Use GCM mode for authenticated encryption when data integrity is critical
 - Never reuse initialization vectors (IVs)
+- Review generated `.meta.yaml` files for encryption details
+- Keep checksum files (`.sha256`) for integrity verification
 
 ## 🔮 Roadmap & Future Enhancements
 
 ### ✅ Completed Features
 - [x] AES-GCM Authenticated Encryption
-- [x] SHA-256, SHA-512 Hashing
+- [x] AES-CBC Traditional Encryption  
+- [x] SHA-256, SHA-512, MD5 Hashing
 - [x] Password-Derived Key Support (PBKDF2)
-
-### ✅ Recently Added Features
 - [x] Configuration File Support (YAML)
+- [x] Plugin Architecture for Encryption Schemes
+- [x] Structured Logging with Color Support
+- [x] File Logging Capabilities
+- [x] Automatic Checksum Generation (SHA-256)
+- [x] Integrity Verification on Decryption
+- [x] Metadata File Generation (.meta.yaml)
+- [x] Concurrent File Processing
+- [x] Resource Cleanup Mechanisms
 
 ### 🚧 Planned Features
 - [ ] RSA Asymmetric Encryption
 - [ ] Encrypt/Decrypt Entire Folders
-- [ ] Logging and Verbose Mode
 - [ ] Output to Specific Directories
 - [ ] Digital Signatures using RSA
-- [ ] Metadata Support
 - [ ] Comprehensive Test Suite
+- [ ] Performance Benchmarking Tools
+- [ ] Additional Plugin Support
 
 ## 🧪 Testing
 

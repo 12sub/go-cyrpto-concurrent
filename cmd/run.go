@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/spf13/cobra"
-
-	"example.com/crypto-cli/crypto"
 	"example.com/crypto-cli/utils"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -33,14 +31,14 @@ var runCmd = &cobra.Command{
 			if salt == "" {
 				s, err := utils.GenerateSalt()
 				if err != nil {
-					fmt.Println("Error generating salt:", err)
+					utils.Error("Error generating salt: %v", err)
 					return
 				}
-				fmt.Println("Generated Salt (Save this for decryption):", utils.EncodeSalt(s))
+				utils.Info("Generated Salt (Save this for decryption): %s", utils.EncodeSalt(s))
 			} else {
 				s, err = utils.DecodeSalt(salt)
 				if err != nil {
-					fmt.Println("Invalid salt:", err)
+					utils.Error("Invalid salt: %v", err)
 					return
 				}
 			}
@@ -87,30 +85,48 @@ func handleString(in string, mode string, key []byte) {
 	var out string
 	var err error
 
-	switch scheme {
-	case "cbc":
-		if mode == "encrypt" {
-			out, err = crypto.Encrypt([]byte(in), key)
-		} else {
-			out, err = crypto.Decrypt(in, key)
-		}
-	case "gcm":
-		if mode == "encrypt" {
-			out, err = crypto.EncryptAesGcm([]byte(in), string(key))
-		} else {
-			plain, err := crypto.DecryptAesGcm(in, string(key))
-			if err == nil {
-				out = string(plain)
-			}
-		}
-	default:
+	// switch scheme {
+	// case "cbc":
+	// 	if mode == "encrypt" {
+	// 		out, err = crypto.Encrypt([]byte(in), key)
+	// 	} else {
+	// 		out, err = crypto.Decrypt(in, key)
+	// 	}
+	// case "gcm":
+	// 	if mode == "encrypt" {
+	// 		out, err = crypto.EncryptAesGcm([]byte(in), string(key))
+	// 	} else {
+	// 		plain, err := crypto.DecryptAesGcm(in, string(key))
+	// 		if err == nil {
+	// 			out = string(plain)
+	// 		}
+	// 	}
+	// default:
+	// 	fmt.Println("Unsupported scheme:", scheme)
+	// 	return
+	// }
+	// if err != nil {
+	// 	fmt.Println("Error:", err)
+	// }
+	plugin, ok := utils.GetPlugin(scheme)
+	if !ok {
 		fmt.Println("Unsupported scheme:", scheme)
 		return
 	}
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
 
+	if mode == "encrypt" {
+		out, err = plugin.Encrypt([]byte(in), key)
+		if err != nil {
+			fmt.Println("Error encrypting:", err)
+			return
+		}
+	} else {
+		var plain []byte
+		plain, err = plugin.Decrypt(in, key)
+		if err == nil {
+			out = string(plain)
+		}
+	}
 	if mode == "encrypt" {
 		fmt.Println("Encrypted: ", out)
 	} else {
@@ -128,30 +144,33 @@ func handleFile(path string, mode string, key []byte) {
 		return
 	}
 	var out string
-	switch scheme {
-	// var out string
-	case "cbc":
-		if mode == "encrypt" {
-			out, err = crypto.Encrypt(data, key)
-		} else {
-			out, err = crypto.Decrypt(string(data), key)
-		}
-	case "gcm":
-		if mode == "encrypt" {
-			out, err = crypto.EncryptAesGcm(data, string(key))
-		} else {
-			plain, err := crypto.DecryptAesGcm(string(data), string(key))
-			if err == nil {
-				out = string(plain)
-			}
-		}
-	default:
+	plugin, ok := utils.GetPlugin(scheme)
+	if !ok {
 		fmt.Println("Unsupported scheme:", scheme)
 		return
 	}
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
+	if mode == "encrypt" {
+		out, err = plugin.Encrypt(data, key)
+		if err == nil {
+			checksum := utils.ComputeSHA256(data)
+			utils.WriteChecksumFile(path, checksum)
+			fmt.Println("SHA256", checksum)
+			return
+		}
+	} else {
+		var plain []byte
+		plain, err := plugin.Decrypt(string(data), key)
+		if err == nil {
+			original := []byte(plain)
+			newChecksum := utils.ComputeSHA256(original)
+			oldChecksum, err := utils.ReadChecksumFile(path)
+			// checking to see if the new checksum is the same as the old one
+			if err == nil && newChecksum != oldChecksum {
+				fmt.Println("WARNING: Decrypted output checksum mismatch! file match not found")
+			} else {
+				fmt.Println("DECRYPTION SUCCESSFUL: Decrypted output matches the original checksum")
+			}
+		}
 	}
 	extension := ".enc"
 	if mode == "decrypt" {

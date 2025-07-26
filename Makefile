@@ -11,6 +11,9 @@ build:
 clean: 
 	rm -f crypto-cli
 
+go-encrypt-cli:
+	go run main.go 
+
 # Encrypt a string
 encrypt-string:
 	go run main.go run --mode=encrypt --type=string --input="$(STR_INPUT)" --key="$(KEY)"

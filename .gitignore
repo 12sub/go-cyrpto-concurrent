@@ -1,0 +1,9 @@
+.vscode
+
+*.log
+*.exe
+*.yaml
+*.sha256
+*.sha256.dec
+*.enc
+*.dec
