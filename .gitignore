@@ -8,3 +8,5 @@
 *.enc
 *.dec
 *.txt
+
+go.sum
