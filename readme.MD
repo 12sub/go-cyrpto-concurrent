@@ -1,11 +1,12 @@
 # 🔐 Go Crypto CLI - Advanced Concurrent Cryptographic Tool
 
-A high-performance, plugin-based cryptographic CLI tool built in Go that provides secure encryption, decryption, and hashing capabilities with advanced features like logging, metadata tracking, and integrity verification. The tool supports multiple encryption schemes through a modular plugin architecture with concurrent file processing capabilities.
+A high-performance, plugin-based cryptographic CLI tool built in Go that provides secure encryption, decryption, and hashing capabilities with advanced features like logging, metadata tracking, and integrity verification. The tool supports multiple encryption schemes including **ChaCha20-Poly1305**, **AES-CBC**, and **AES-GCM** through a modular plugin architecture with concurrent file processing capabilities.
 
 ## ✨ Advanced Features
 
 ### 🔒 Encryption & Decryption
 - **Plugin Architecture**: Modular encryption schemes via plugin system
+- **ChaCha20-Poly1305 Plugin**: Modern authenticated encryption with 32-byte keys
 - **AES-CBC Plugin**: Traditional AES with Cipher Block Chaining  
 - **AES-GCM Plugin**: Authenticated encryption with additional data (AEAD)
 - **String Encryption**: Encrypt/decrypt individual strings
@@ -57,6 +58,7 @@ go-crypto-concurrent/
 │   ├── run.go             # Encryption/decryption commands
 │   └── hash.go            # Hashing commands
 ├── crypto/                 # Core cryptographic implementations
+│   ├── chacha.go          # ChaCha20-Poly1305 encryption/decryption
 │   ├── encrypt.go         # AES-CBC encryption functions
 │   ├── decrypt.go         # AES-CBC decryption functions
 │   ├── encryptAesGcm.go   # AES-GCM encryption functions
@@ -66,6 +68,7 @@ go-crypto-concurrent/
 │   └── config/            # Configuration management
 │       └── config.go      # YAML configuration loading
 ├── plugins/                # Plugin architecture
+│   ├── chacha.go          # ChaCha20-Poly1305 plugin implementation
 │   ├── cbc.go             # AES-CBC plugin implementation
 │   └── gcm.go             # AES-GCM plugin implementation  
 ├── utils/                  # Utility functions and core services
@@ -132,6 +135,9 @@ go run main.go run --mode=encrypt --type=string --input="HelloWorld" --key="1234
 
 # Encrypt a string using AES-GCM (authenticated encryption)
 go run main.go run --mode=encrypt --type=string --input="HelloWorld" --key="1234567890abcdef" --scheme=gcm
+
+# Encrypt a string using ChaCha20-Poly1305 (modern authenticated encryption)
+go run main.go run --mode=encrypt --type=string --input="HelloWorld" --key="1234567890abcdef1234567890abcdef" --scheme=chacha
 
 # Decrypt a string
 go run main.go run --mode=decrypt --type=string --input="ENCRYPTED_STRING_HERE" --key="1234567890abcdef"
@@ -233,7 +239,7 @@ The tool now supports YAML configuration files to set default values and avoid r
 
 ```yaml
 # config.yaml
-default_scheme: "gcm"           # Default encryption scheme: "cbc" or "gcm"
+default_scheme: "chacha"        # Default encryption scheme: "cbc", "gcm", or "chacha"
 concurrent: true                # Enable concurrent processing by default
 log_level: "info"              # Logging level: "debug", "info", "warn", "error"
 
@@ -255,11 +261,13 @@ crypto-cli --config=config.yaml run --type=file --concurrent=false --scheme=cbc
 ```
 
 ### Key Requirements
-- **AES Keys**: Must be exactly 16 bytes for AES-128
+- **AES Keys**: Must be exactly 16 bytes for AES-128 (CBC/GCM modes)
+- **ChaCha20 Keys**: Must be exactly 32 bytes for ChaCha20-Poly1305
 - **Password Mode**: Uses PBKDF2 with 10,000 iterations and SHA-256
 - **Salt**: Automatically generated for password-based encryption (save for decryption)
 
 ### Encryption Schemes
+- **ChaCha20-Poly1305**: Modern stream cipher with authenticated encryption (AEAD)
 - **CBC (Cipher Block Chaining)**: Traditional mode with IV
 - **GCM (Galois/Counter Mode)**: Authenticated encryption with integrity checking
 
@@ -323,6 +331,7 @@ type Plugin interface {
 ```
 
 ### Available Plugins
+- **ChaCha Plugin**: ChaCha20-Poly1305 authenticated encryption
 - **CBC Plugin**: AES-CBC encryption with PKCS#7 padding
 - **GCM Plugin**: AES-GCM authenticated encryption
 
@@ -334,6 +343,7 @@ type Plugin interface {
 ## 🛡️ Security Considerations
 
 ### Cryptographic Standards
+- **ChaCha20-Poly1305**: Modern stream cipher with authenticated encryption
 - **AES-128**: Industry-standard symmetric encryption
 - **PBKDF2**: Secure password-based key derivation (10,000 iterations)
 - **Secure Random**: Cryptographically secure random number generation
@@ -341,16 +351,17 @@ type Plugin interface {
 - **SHA-256 Checksums**: Automatic integrity verification
 
 ### Best Practices
-- Always use strong, unique keys (16 bytes for AES-128)
+- Always use strong, unique keys (16 bytes for AES-128, 32 bytes for ChaCha20)
 - Store salts securely when using password-based encryption
-- Use GCM mode for authenticated encryption when data integrity is critical
-- Never reuse initialization vectors (IVs)
+- Use ChaCha20-Poly1305 or GCM mode for authenticated encryption when data integrity is critical
+- Never reuse initialization vectors (IVs) or nonces
 - Review generated `.meta.yaml` files for encryption details
 - Keep checksum files (`.sha256`) for integrity verification
 
 ## 🔮 Roadmap & Future Enhancements
 
 ### ✅ Completed Features
+- [x] ChaCha20-Poly1305 Modern Authenticated Encryption
 - [x] AES-GCM Authenticated Encryption
 - [x] AES-CBC Traditional Encryption  
 - [x] SHA-256, SHA-512, MD5 Hashing
