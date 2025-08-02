@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"errors"
+	"log"
 
 	"example.com/crypto-cli/utils"
 )
@@ -17,13 +18,16 @@ func DecryptAesGcm(cipherHex string, password string) ([]byte, error) {
 	}
 	// Extract the salt, nonce and get ciphertext
 	// note: salt (first 16 bytes), nonce (next 12 bytes), rest is ciphertext
-
+	var scheme string
 	salt := data[:utils.SaltSize]
 	nonce := data[utils.SaltSize:utils.SaltSize+12]
 	ciphertext := data[utils.SaltSize+12:]
 
 	// getting your derived key
-	derivedKey := utils.DeriveKey(password, salt)
+	derivedKey, err := utils.DeriveKeyWithScheme(password, salt, scheme)
+	if err != nil{
+		log.Fatalf("Key derivation failed: %v", err)
+	}
 
 	// initiating cipher key
 	block, err := aes.NewCipher(derivedKey)

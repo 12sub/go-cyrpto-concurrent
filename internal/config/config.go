@@ -18,9 +18,12 @@ type Config struct {
 	DefaultPassword string   `yaml:"default_password"`
 	LogLevel        string   `yaml:"log_level"`
 	FileTask        FileTask `yaml:"file_task"`
+	Salt            string   `yaml:"salt"`
+	Input           string   `yaml:"input"`
+	Output          string   `yaml:"output"`
 }
 
-// more changes will be made for reading commands from configuration files 
+// more changes will be made for reading commands from configuration files
 
 func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)

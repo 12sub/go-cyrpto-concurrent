@@ -48,7 +48,10 @@ var runCmd = &cobra.Command{
 					return
 				}
 			}
-			k = utils.DeriveKey(password, s)
+			k, err = utils.DeriveKeyWithScheme(password, s, scheme)
+			if err != nil {
+				utils.Error("Key derivation failed: %v", err)
+			}
 		} else {
 			k = []byte(key)
 			if len(k) != 16 {

@@ -5,6 +5,7 @@ package utils
 type Plugin interface {
 	Encrypt(data []byte, key []byte) (string, error)
 	Decrypt(data string, key []byte) ([]byte, error)
+	Name()	string
 
 }
 

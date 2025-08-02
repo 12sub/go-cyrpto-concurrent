@@ -3,7 +3,7 @@
 
 # Default encryption scheme to use when not specified
 # Options: "cbc" (Cipher Block Chaining) or "gcm" (Galois/Counter Mode)
-default_scheme: "gcm"
+default_scheme: "chacha"
 
 # Enable concurrent file processing by default
 # When true, multiple files are processed simultaneously for better performance
@@ -12,12 +12,12 @@ concurrent: true
 # Default password for PBKDF2 key derivation (optional)
 # WARNING: Storing passwords in config files is not recommended for production use
 # Leave empty to require password input or use --password flag
-default_password: ""
+default_password: "1234567890abcdef"
 
 # Logging verbosity level
 # Options: "debug", "info", "warn", "error"
 log_level: "info"
-
+output: "encrypted_output.txt"
 # Batch file operation configuration
 file_task:
   # Default operation mode

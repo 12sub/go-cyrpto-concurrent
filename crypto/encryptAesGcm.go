@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io"
+	"log"
 
 	"example.com/crypto-cli/utils"
 )
@@ -16,8 +17,12 @@ func EncryptAesGcm(plaintext []byte, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	var scheme string
 	// implementing salt for key generation
-	derivedKey := utils.DeriveKey(password, salt)
+	derivedKey, err := utils.DeriveKeyWithScheme(password, salt, scheme)
+	if err != nil{
+		log.Fatalf("Key derivation failed: %v", err)
+	}
 
 	// initiating cipher key
 	block, err := aes.NewCipher(derivedKey)

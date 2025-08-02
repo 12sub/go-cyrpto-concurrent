@@ -2,7 +2,7 @@
 
 *.log
 *.exe
-*.yaml
+# *.yaml
 *.sha256
 *.sha256.dec
 *.enc
@@ -11,3 +11,5 @@
 *.sum
 
 go.sum
+
+./results/

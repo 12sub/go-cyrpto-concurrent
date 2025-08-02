@@ -44,6 +44,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&logfile, "logfile", false, "Enable Logging to file (crypto-cli.log)")
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(hashCmd)
+	rootCmd.AddCommand(configCmd)
 	cobra.OnInitialize(initLogger)
 }
 

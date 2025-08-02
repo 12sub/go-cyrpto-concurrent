@@ -1,0 +1,15 @@
+# Configuration for Crypto CLI
+
+default_scheme: "cbc"              # Options: gcm, cbc
+concurrent: true                 # Run encryption/decryption concurrently
+default_password: "secret123xoV5678"    # Used if no key is provided
+log_level: "info"                # Options: debug, info, warn, error
+output: "test_output.txt"
+file_task:
+  mode: "encrypt"                  # Options: encrypt, decrypt
+  files:
+    - "file1.txt"
+    - "file2.txt"
+
+salt: "bfc2e8d23fd45a7e9e6319d3b7fc4f62"  # Hex-encoded salt
+  
